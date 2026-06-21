@@ -1,0 +1,1029 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>¡Golazo para Papá! - Día del Padre</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800;900&family=Playfair+Display:ital,wght@0,700;1,400&display=swap" rel="stylesheet">
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: radial-gradient(circle, #1a2f1b 0%, #0a140b 100%);
+            overflow-x: hidden;
+        }
+        
+        /* 3D Card Animations */
+        .perspective-1000 {
+            perspective: 1000px;
+        }
+        .preserve-3d {
+            transform-style: preserve-3d;
+        }
+        .backface-hidden {
+            backface-visibility: hidden;
+        }
+        .rotate-y-180 {
+            transform: rotateY(180deg);
+        }
+        
+        /* Glow Effects */
+        .neon-glow {
+            text-shadow: 0 0 10px rgba(74, 222, 128, 0.8), 0 0 20px rgba(74, 222, 128, 0.5);
+        }
+        .card-glow {
+            box-shadow: 0 0 30px rgba(239, 68, 68, 0.3);
+        }
+
+        /* Confetti piece styling */
+        .confetti {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            pointer-events: none;
+            z-index: 100;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center justify-between text-white p-4">
+
+    <!-- AUDIO TRIGGER OVERLAY FOR MOBILE COMPATIBILITY -->
+    <div id="welcome-modal" class="fixed inset-0 bg-black/95 flex flex-col items-center justify-center z-50 p-6 text-center transition-opacity duration-500">
+        <div class="max-w-md bg-zinc-900 border-2 border-yellow-400 rounded-3xl p-6 shadow-2xl space-y-4">
+            
+            <h1 class="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 via-orange-400 to-red-400 tracking-tight animate-pulse">
+                ¡PARA EMPEZAR, ANOTA UN GOL! ⚽
+            </h1>
+            
+            <p class="text-gray-300 text-sm leading-relaxed" id="welcome-instruction">
+                ¡Hola, Papá! Supera al astuto portero conejo metiéndole un golazo.
+            </p>
+
+            <!-- Referencing the provided image for the bunny goalkeeper challenger as displayed in image_029a8c.jpg -->
+            <div class="relative">
+                <img src="image_029a8c.jpg" alt="Portero Conejito Desafío" class="w-full max-h-48 object-cover rounded-2xl border-4 border-yellow-400 shadow-lg mx-auto" onerror="this.src='https://placehold.co/400x200/a855f7/ffffff?text=Portero+Conejito'" />
+                <span class="absolute -bottom-2 -right-2 bg-red-500 text-white text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider shadow-md">
+                    Tu rival 🐰
+                </span>
+            </div>
+
+            <div class="bg-zinc-800/80 p-3.5 rounded-xl text-left border border-zinc-700">
+                <p class="text-xs text-emerald-400 font-semibold mb-1"><i class="fa-solid fa-gamepad mr-1"></i> ¿Cómo tirar?</p>
+                <p class="text-xs text-gray-300 leading-relaxed">
+                    <strong>Móvil:</strong> Desliza el dedo sobre el balón de abajo hacia arriba en dirección al arco.<br>
+                    <strong>PC:</strong> Haz clic, arrastra hacia adelante velozmente y suelta para patear.
+                </p>
+            </div>
+
+            <button id="start-btn" class="w-full bg-gradient-to-r from-yellow-500 via-orange-500 to-red-500 hover:from-yellow-400 hover:to-red-400 text-white font-extrabold py-3.5 px-6 rounded-2xl shadow-lg transform hover:scale-105 transition-all text-lg tracking-wider">
+                <i class="fa-solid fa-play mr-2 animate-bounce"></i> ¡ACEPTAR DESAFÍO!
+            </button>
+        </div>
+    </div>
+
+    <!-- MAIN APP CONTAINER -->
+    <div class="w-full max-w-lg flex-1 flex flex-col justify-between items-center z-10">
+        
+        <!-- HEADER STATS -->
+        <header class="w-full text-center py-2">
+            <h2 class="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-emerald-400 to-green-400 tracking-wider">
+                CAMPEONATO DÍA DEL PADRE
+            </h2>
+            <div class="flex justify-center gap-6 mt-2 text-xs text-gray-300">
+                <span class="bg-black/40 px-3 py-1 rounded-full border border-zinc-800">
+                    <i class="fa-solid fa-star text-yellow-400 mr-1"></i> Intentos: <strong id="attempt-counter" class="text-white text-sm">0</strong>
+                </span>
+                <span class="bg-black/40 px-3 py-1 rounded-full border border-zinc-800">
+                    <i class="fa-solid fa-trophy text-emerald-400 mr-1"></i> Goles: <strong id="goal-counter" class="text-white text-sm">0</strong>
+                </span>
+            </div>
+        </header>
+
+        <!-- GAME STAGE CANVAS / FIELD AREA -->
+        <div class="relative w-full aspect-[3/4] max-h-[500px] bg-gradient-to-b from-emerald-900 to-green-950 rounded-3xl overflow-hidden border-4 border-zinc-800 shadow-2xl">
+            
+            <!-- Lines of the Football Field -->
+            <div class="absolute inset-x-0 top-0 h-1/2 border-b-2 border-white/20"></div>
+            <div class="absolute inset-x-4 top-0 h-1/4 border-x-2 border-b-2 border-white/20 rounded-b-xl"></div>
+            <!-- Penalty Spot -->
+            <div class="absolute left-1/2 top-1/4 -translate-x-1/2 -translate-y-1/2 w-2 h-2 bg-white/40 rounded-full"></div>
+            <!-- Penalty Arc -->
+            <div class="absolute left-1/2 top-1/4 -translate-x-1/2 w-16 h-8 border-b-2 border-white/20 rounded-b-full"></div>
+            <!-- Field mowing stripes style -->
+            <div class="absolute inset-0 flex flex-col justify-between pointer-events-none opacity-10">
+                <div class="h-[12.5%] bg-white"></div>
+                <div></div>
+                <div class="h-[12.5%] bg-white"></div>
+                <div></div>
+                <div class="h-[12.5%] bg-white"></div>
+                <div></div>
+                <div class="h-[12.5%] bg-white"></div>
+            </div>
+
+            <!-- Goalpost (HTML elements inside the container) -->
+            <div class="absolute top-4 inset-x-12 h-20 border-t-4 border-x-4 border-white rounded-t-md shadow-[0_10px_20px_rgba(255,255,255,0.1)] flex items-end justify-center">
+                <!-- Goal net visual back -->
+                <div class="absolute inset-0 bg-grid opacity-30 bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] [background-size:16px_16px]"></div>
+                <!-- Goalkeeper visual indicator (horizontal bar zone) -->
+                <div class="absolute bottom-0 inset-x-0 h-1 bg-white/10"></div>
+            </div>
+
+            <!-- INTERACTIVE CANVAS FOR PHYSICS -->
+            <canvas id="gameCanvas" class="absolute inset-0 w-full h-full cursor-grab active:cursor-grabbing z-20"></canvas>
+            
+            <!-- GOAL CELEBRATION OVERLAY -->
+            <div id="goal-overlay" class="absolute inset-0 bg-black/70 flex flex-col items-center justify-center text-center opacity-0 pointer-events-none transition-all duration-500 z-30 scale-95">
+                <div class="space-y-4 px-6 animate-bounce">
+                    <span class="text-yellow-400 text-6xl block">🏆</span>
+                    <h2 class="text-6xl font-black text-yellow-300 tracking-wider drop-shadow-[0_5px_15px_rgba(234,179,8,0.5)] animate-pulse">
+                        ¡GOOOOOOL!
+                    </h2>
+                    <p class="text-2xl font-bold text-white">¡Qué golazo, papá!</p>
+                    <p class="text-emerald-400 text-sm">¡Has superado al portero! Disfruta tu sorpresa...</p>
+                </div>
+            </div>
+
+            <!-- SWIPE DIRECTIONAL TUTORIAL GUIDE -->
+            <div id="drag-guide" class="absolute bottom-28 left-1/2 -translate-x-1/2 pointer-events-none flex flex-col items-center gap-2 opacity-80 animate-pulse">
+                <span class="text-xs tracking-widest text-white/60 uppercase">Desliza hacia arriba para tirar</span>
+                <i class="fa-solid fa-angles-up text-white text-xl animate-bounce"></i>
+            </div>
+        </div>
+
+        <!-- FOOTER / GAME CONTROLS -->
+        <footer class="w-full text-center py-4 text-xs text-gray-400 flex flex-col items-center gap-2">
+            <p><i class="fa-solid fa-heart text-red-500 mr-1 animate-pulse"></i> Creado especialmente para el mejor Papá del mundo.</p>
+            <button id="reset-game-btn" class="text-emerald-400 hover:text-emerald-300 underline font-semibold transition-all">
+                Reiniciar estadísticas
+            </button>
+        </footer>
+    </div>
+
+    <!-- FATHER'S DAY CARD POPUP (Hidden by default, shown on Goal) -->
+    <div id="card-popup" class="fixed inset-0 bg-black/95 flex flex-col items-center justify-center z-40 p-4 transition-opacity duration-700 opacity-0 pointer-events-none overflow-y-auto">
+        
+        <!-- CARD CONTAINER -->
+        <div class="w-full max-w-md my-8 flex flex-col items-center">
+            
+            <div class="text-center mb-6 space-y-2">
+                <h3 class="text-3xl font-black text-white tracking-tight">¡TU TARJETA ESPECIAL!</h3>
+                <p class="text-gray-400 text-sm">¡Un mensaje muy especial directo para ti!</p>
+            </div>
+
+            <!-- THE 3D CARD IMPLEMENTATION matching image_02a512.png visual design -->
+            <div id="interactive-3d-card" class="relative w-[320px] h-[460px] perspective-1000 cursor-pointer mb-8">
+                
+                <!-- Inner Wrapper for 3D Flip -->
+                <div id="card-inner" class="relative w-full h-full duration-1000 preserve-3d shadow-2xl rounded-2xl">
+                    
+                    <!-- FRONT COVER (Red Velvet/Gold Theme as seen in image_02a512.png) -->
+                    <div class="absolute inset-0 bg-gradient-to-br from-red-700 via-red-800 to-rose-950 rounded-2xl backface-hidden flex flex-col justify-between p-8 border-4 border-yellow-500/40 shadow-inner">
+                        <!-- Golden Corner Ornaments (Crown icons from screenshot) -->
+                        <div class="absolute top-4 left-4 text-yellow-500/60 text-lg"><i class="fa-solid fa-crown"></i></div>
+                        <div class="absolute top-4 right-4 text-yellow-500/60 text-lg"><i class="fa-solid fa-crown"></i></div>
+                        <div class="absolute bottom-4 left-4 text-yellow-500/60 text-lg"><i class="fa-solid fa-crown"></i></div>
+                        <div class="absolute bottom-4 right-4 text-yellow-500/60 text-lg"><i class="fa-solid fa-crown"></i></div>
+
+                        <div class="text-center mt-6">
+                            <span class="text-5xl font-bold text-yellow-400 block mb-2 drop-shadow-md">
+                                <i class="fa-solid fa-trophy text-yellow-400 text-5xl"></i>
+                            </span>
+                            <h4 class="text-yellow-400 font-bold text-xs tracking-widest uppercase">AL MEJOR ENTRENADOR Y PAPÁ</h4>
+                        </div>
+                        
+                        <div class="text-center space-y-4">
+                            <h2 class="text-4xl font-black text-white leading-none tracking-tight font-serif italic">
+                                ¡Feliz Día<br>
+                                <span class="text-yellow-400 text-5xl font-black not-italic block mt-1">PAPÁ!</span>
+                            </h2>
+                            <div class="h-1 w-20 bg-yellow-400 mx-auto rounded-full"></div>
+                        </div>
+
+                        <div class="text-center mb-6 space-y-2">
+                            <p class="text-gray-200 text-xs italic">"Para el mundo eres un padre, para mí eres el campeón."</p>
+                            <span class="inline-block animate-bounce text-yellow-400 text-sm font-semibold bg-white/10 px-4 py-2 rounded-full border border-white/20">
+                                <i class="fa-solid fa-envelope-open mr-1"></i> Abrir tarjeta
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- BACK COVER / INNER REVEAL (Beautiful heartfelt long-distance letter) -->
+                    <div class="absolute inset-0 bg-stone-100 rounded-2xl rotate-y-180 backface-hidden flex flex-col justify-between p-6 border-4 border-yellow-600/30 text-stone-800 shadow-2xl relative">
+                        
+                        <!-- Header inside the card -->
+                        <div class="flex justify-between items-center border-b border-stone-300 pb-2">
+                            <span class="text-xs font-bold uppercase tracking-wider text-rose-700 font-sans"><i class="fa-solid fa-medal mr-1"></i> Mensaje de Corazón</span>
+                            <span class="text-stone-400 text-xs font-serif italic" id="card-date-placeholder">Día del Padre</span>
+                        </div>
+
+                        <!-- Card Body (The Letter addressing the distance and support) -->
+                        <div class="flex-1 flex flex-col justify-center py-2 space-y-3 font-serif text-sm leading-relaxed text-stone-700 text-center relative">
+                            <!-- Soccer ball faint background -->
+                            <div class="absolute inset-0 flex items-center justify-center opacity-[0.03] pointer-events-none">
+                                <i class="fa-solid fa-soccer-ball text-[180px]"></i>
+                            </div>
+
+                            <p class="text-base font-bold text-rose-800 font-sans tracking-tight">¡GRACIAS POR ESTAR SIEMPRE!</p>
+                            
+                            <!-- CUSTOMIZABLE MESSAGE AREA (Reflects father in another country, supporting fully) -->
+                            <div id="message-container" class="relative z-10 select-none max-h-[240px] overflow-y-auto px-1">
+                                <p id="main-greeting-text" class="italic text-[11px] leading-relaxed md:text-xs text-stone-700">
+                                    "Papá: Sé que estás lejos trabajando en otro país y no podemos abrazarnos seguido, pero quiero darte las gracias de todo corazón. A pesar de la distancia, siempre estás ahí para escucharme, guiarme y apoyarme en todo lo que puedes. Tu esfuerzo diario vale muchísimo para mí. Aunque estemos lejos, te siento muy cerca de mí todos los días. ¡Te amo muchísimo, feliz Día del Padre!"
+                                </p>
+                            </div>
+                            
+                            <div class="flex flex-col items-center gap-0.5 mt-2">
+                                <p class="text-[9px] font-sans not-italic font-bold text-stone-500 uppercase tracking-widest">Con todo mi amor:</p>
+                                <p id="signature-text" class="text-base font-bold font-serif italic text-rose-700">Tu hijo/a que te admira</p>
+                            </div>
+                        </div>
+
+                        <!-- Footer controls inside card (Just indicators, no action buttons) -->
+                        <div class="border-t border-stone-300 pt-2 text-center">
+                            <span class="text-[10px] text-stone-500 font-sans italic">Haz clic de nuevo para voltear</span>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Todos los botones como Copiar Enlace, Jugar de nuevo o Solo ver el campo han sido removidos por completo -->
+        </div>
+    </div>
+
+    <script>
+        // WEB AUDIO API SYNTHESIZER FOR IMMERSIVE SOUNDS
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+        function playKickSound() {
+            try {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+
+                osc.frequency.setValueAtTime(150, audioCtx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(30, audioCtx.currentTime + 0.15);
+
+                gain.gain.setValueAtTime(0.6, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
+
+                osc.start(audioCtx.currentTime);
+                osc.stop(audioCtx.currentTime + 0.2);
+            } catch(e) { console.log("Sound error"); }
+        }
+
+        function playWhistleSound() {
+            try {
+                const osc1 = audioCtx.createOscillator();
+                const osc2 = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+
+                osc1.connect(gain);
+                osc2.connect(gain);
+                gain.connect(audioCtx.destination);
+
+                osc1.frequency.setValueAtTime(1800, audioCtx.currentTime);
+                osc2.frequency.setValueAtTime(1850, audioCtx.currentTime);
+
+                gain.gain.setValueAtTime(0.01, audioCtx.currentTime);
+                gain.gain.linearRampToValueAtTime(0.2, audioCtx.currentTime + 0.05);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.15);
+                
+                gain.gain.linearRampToValueAtTime(0.2, audioCtx.currentTime + 0.2);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.6);
+
+                osc1.start(audioCtx.currentTime);
+                osc2.start(audioCtx.currentTime);
+                osc1.stop(audioCtx.currentTime + 0.6);
+                osc2.stop(audioCtx.currentTime + 0.6);
+            } catch(e) {}
+        }
+
+        function playGoalCheer() {
+            try {
+                const bufferSize = audioCtx.sampleRate * 2.5; 
+                const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+                const data = buffer.getChannelData(0);
+
+                for (let i = 0; i < bufferSize; i++) {
+                    data[i] = Math.random() * 2 - 1;
+                }
+
+                const noise = audioCtx.createBufferSource();
+                noise.buffer = buffer;
+
+                const filter = audioCtx.createBiquadFilter();
+                filter.type = 'bandpass';
+                filter.frequency.value = 1000;
+                filter.Q.value = 1.0;
+
+                const gain = audioCtx.createGain();
+                
+                noise.connect(filter);
+                filter.connect(gain);
+                gain.connect(audioCtx.destination);
+
+                gain.gain.setValueAtTime(0.01, audioCtx.currentTime);
+                gain.gain.linearRampToValueAtTime(0.5, audioCtx.currentTime + 0.3);
+                gain.gain.linearRampToValueAtTime(0.3, audioCtx.currentTime + 1.2);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 2.5);
+
+                noise.start(audioCtx.currentTime);
+                noise.stop(audioCtx.currentTime + 2.5);
+
+                const whistle = audioCtx.createOscillator();
+                const whistleGain = audioCtx.createGain();
+                whistle.frequency.setValueAtTime(1200, audioCtx.currentTime);
+                whistle.connect(whistleGain);
+                whistleGain.connect(audioCtx.destination);
+                whistleGain.gain.setValueAtTime(0.05, audioCtx.currentTime);
+                whistleGain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.8);
+                whistle.start(audioCtx.currentTime);
+                whistle.stop(audioCtx.currentTime + 0.8);
+
+            } catch(e) {}
+        }
+
+        function playSaveSound() {
+            try {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.frequency.setValueAtTime(90, audioCtx.currentTime);
+                gain.gain.setValueAtTime(0.4, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.25);
+                osc.start(audioCtx.currentTime);
+                osc.stop(audioCtx.currentTime + 0.25);
+            } catch(e) {}
+        }
+
+        // PHYSICS GAME CORE
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        function resizeCanvas() {
+            const rect = canvas.getBoundingClientRect();
+            canvas.width = rect.width;
+            canvas.height = rect.height;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        let goals = 0;
+        let attempts = 0;
+        let gameState = 'waiting'; 
+
+        let ball = {
+            startX: 0,
+            startY: 0,
+            x: 0,
+            y: 0,
+            vx: 0,
+            vy: 0,
+            radius: 26,
+            currentRadius: 26,
+            rotation: 0,
+            vRotation: 0,
+            color: '#ffffff'
+        };
+
+        let keeper = {
+            x: 0,
+            y: 0,
+            width: 75,
+            height: 85,
+            direction: 1, 
+            speed: 3.5,
+            state: 'idle', 
+            diveTimer: 0
+        };
+
+        let dragStart = { x: 0, y: 0 };
+        let dragCurrent = { x: 0, y: 0 };
+        let isDragging = false;
+        let lastDragTime = 0;
+
+        function initPositions() {
+            ball.startX = canvas.width / 2;
+            ball.startY = canvas.height * 0.82;
+            ball.x = ball.startX;
+            ball.y = ball.startY;
+            ball.vx = 0;
+            ball.vy = 0;
+            ball.radius = canvas.width * 0.065; 
+            ball.currentRadius = ball.radius;
+            ball.rotation = 0;
+            ball.vRotation = 0;
+
+            keeper.x = canvas.width / 2;
+            keeper.y = canvas.height * 0.18;
+            keeper.width = canvas.width * 0.16;
+            keeper.height = canvas.width * 0.18;
+            keeper.speed = 3.5 + (goals * 0.5); 
+            if (keeper.speed > 8) keeper.speed = 8; 
+            keeper.state = 'idle';
+            keeper.diveTimer = 0;
+
+            gameState = 'waiting';
+            document.getElementById('drag-guide').style.opacity = '0.8';
+        }
+
+        function getGoalDetails() {
+            const goalLeft = canvas.width * 0.13;
+            const goalRight = canvas.width * 0.87;
+            const goalTop = canvas.height * 0.04;
+            const goalBottom = canvas.height * 0.20;
+            return { goalLeft, goalRight, goalTop, goalBottom };
+        }
+
+        function drawSoccerBall(x, y, radius, rotation) {
+            ctx.save();
+            ctx.translate(x, y);
+            ctx.rotate(rotation);
+
+            const shadowOffset = radius * 0.35 * (radius / ball.radius);
+            ctx.beginPath();
+            ctx.ellipse(0, shadowOffset, radius * 0.9, radius * 0.3, 0, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
+            ctx.fill();
+
+            ctx.beginPath();
+            ctx.arc(0, 0, radius, 0, Math.PI * 2);
+            ctx.fillStyle = '#ffffff';
+            ctx.fill();
+            ctx.lineWidth = radius * 0.08;
+            ctx.strokeStyle = '#000000';
+            ctx.stroke();
+
+            const drawPentagon = (px, py, r) => {
+                ctx.beginPath();
+                for (let i = 0; i < 5; i++) {
+                    const angle = (Math.PI * 2 / 5) * i - Math.PI / 2;
+                    const xPos = px + Math.cos(angle) * r;
+                    const yPos = py + Math.sin(angle) * r;
+                    if (i === 0) ctx.moveTo(xPos, yPos);
+                    else ctx.lineTo(xPos, yPos);
+                }
+                ctx.closePath();
+                ctx.fillStyle = '#18181b';
+                ctx.fill();
+                ctx.stroke();
+            };
+
+            drawPentagon(0, 0, radius * 0.35);
+
+            ctx.strokeStyle = '#18181b';
+            ctx.lineWidth = radius * 0.06;
+            for (let i = 0; i < 5; i++) {
+                const angle = (Math.PI * 2 / 5) * i - Math.PI / 2;
+                const innerX = Math.cos(angle) * (radius * 0.35);
+                const innerY = Math.sin(angle) * (radius * 0.35);
+                const outerX = Math.cos(angle) * radius;
+                const outerY = Math.sin(angle) * radius;
+                
+                ctx.beginPath();
+                ctx.moveTo(innerX, innerY);
+                ctx.lineTo(outerX, outerY);
+                ctx.stroke();
+
+                ctx.beginPath();
+                ctx.arc(outerX, outerY, radius * 0.15, 0, Math.PI * 2);
+                ctx.fillStyle = '#18181b';
+                ctx.fill();
+            }
+
+            ctx.beginPath();
+            ctx.arc(-radius * 0.3, -radius * 0.3, radius * 0.2, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+            ctx.fill();
+
+            ctx.restore();
+        }
+
+        function drawGoalkeeper(x, y, w, h) {
+            ctx.save();
+            ctx.translate(x, y);
+
+            ctx.beginPath();
+            ctx.ellipse(0, h * 0.48, w * 0.5, h * 0.12, 0, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+            ctx.fill();
+
+            ctx.strokeStyle = '#000000';
+            ctx.lineWidth = 3.5;
+
+            // Left Ear
+            ctx.save();
+            ctx.translate(-w * 0.2, -h * 0.35);
+            ctx.rotate(-Math.PI / 24);
+            ctx.beginPath();
+            ctx.ellipse(0, -h * 0.25, w * 0.12, h * 0.26, 0, 0, Math.PI * 2);
+            ctx.fillStyle = '#b07cfb'; 
+            ctx.fill();
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.ellipse(0, -h * 0.25, w * 0.06, h * 0.18, 0, 0, Math.PI * 2);
+            ctx.fillStyle = '#f472b6'; 
+            ctx.fill();
+            ctx.restore();
+
+            // Right Ear
+            ctx.save();
+            ctx.translate(w * 0.2, -h * 0.35);
+            ctx.rotate(Math.PI / 24);
+            ctx.beginPath();
+            ctx.ellipse(0, -h * 0.25, w * 0.12, h * 0.26, 0, 0, Math.PI * 2);
+            ctx.fillStyle = '#b07cfb'; 
+            ctx.fill();
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.ellipse(0, -h * 0.25, w * 0.06, h * 0.18, 0, 0, Math.PI * 2);
+            ctx.fillStyle = '#f472b6'; 
+            ctx.fill();
+            ctx.restore();
+
+            // Head
+            ctx.beginPath();
+            ctx.arc(0, -h * 0.15, w * 0.36, 0, Math.PI * 2);
+            ctx.fillStyle = '#b07cfb'; 
+            ctx.fill();
+            ctx.stroke();
+
+            // Eyes
+            const eyeOffset = w * 0.12;
+            const eyeSize = w * 0.08;
+
+            ctx.beginPath();
+            ctx.arc(-eyeOffset, -h * 0.18, eyeSize, 0, Math.PI * 2);
+            ctx.fillStyle = '#ffffff';
+            ctx.fill();
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.arc(-eyeOffset + 2, -h * 0.18, eyeSize * 0.45, 0, Math.PI * 2);
+            ctx.fillStyle = '#000000';
+            ctx.fill();
+
+            ctx.beginPath();
+            ctx.arc(eyeOffset, -h * 0.18, eyeSize, 0, Math.PI * 2);
+            ctx.fillStyle = '#ffffff';
+            ctx.fill();
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.arc(eyeOffset - 2, -h * 0.18, eyeSize * 0.45, 0, Math.PI * 2);
+            ctx.fillStyle = '#000000';
+            ctx.fill();
+
+            // Eyebrows
+            ctx.lineWidth = 3.5;
+            ctx.strokeStyle = '#000000';
+            ctx.beginPath();
+            ctx.moveTo(-eyeOffset - w * 0.07, -h * 0.28);
+            ctx.lineTo(-eyeOffset + w * 0.06, -h * 0.24);
+            ctx.stroke();
+
+            ctx.beginPath();
+            ctx.moveTo(eyeOffset + w * 0.07, -h * 0.28);
+            ctx.lineTo(eyeOffset - w * 0.06, -h * 0.24);
+            ctx.stroke();
+
+            // Nose & Whiskers
+            ctx.beginPath();
+            ctx.arc(0, -h * 0.11, w * 0.05, 0, Math.PI * 2);
+            ctx.fillStyle = '#2d1b4e'; 
+            ctx.fill();
+
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(-w * 0.15, -h * 0.12);
+            ctx.lineTo(-w * 0.32, -h * 0.14);
+            ctx.moveTo(-w * 0.15, -h * 0.09);
+            ctx.lineTo(-w * 0.32, -h * 0.09);
+            ctx.stroke();
+
+            ctx.beginPath();
+            ctx.moveTo(w * 0.15, -h * 0.12);
+            ctx.lineTo(w * 0.32, -h * 0.14);
+            ctx.moveTo(w * 0.15, -h * 0.09);
+            ctx.lineTo(w * 0.32, -h * 0.09);
+            ctx.stroke();
+
+            ctx.beginPath();
+            ctx.arc(0, -h * 0.07, w * 0.05, 0, Math.PI);
+            ctx.stroke();
+
+            // Jersey
+            ctx.beginPath();
+            ctx.roundRect(-w * 0.28, -h * 0.02, w * 0.56, h * 0.32, 10);
+            ctx.fillStyle = '#ef4444'; 
+            ctx.fill();
+            ctx.stroke();
+
+            ctx.beginPath();
+            ctx.moveTo(-w * 0.14, -h * 0.02);
+            ctx.lineTo(0, h * 0.04);
+            ctx.lineTo(w * 0.14, -h * 0.02);
+            ctx.strokeStyle = '#2563eb'; 
+            ctx.lineWidth = 5;
+            ctx.stroke();
+
+            // Shorts
+            ctx.beginPath();
+            ctx.rect(-w * 0.28, h * 0.24, w * 0.56, h * 0.12);
+            ctx.fillStyle = '#2563eb'; 
+            ctx.fill();
+            ctx.lineWidth = 3.5;
+            ctx.strokeStyle = '#000000';
+            ctx.stroke();
+
+            // Arms & Gloves
+            ctx.lineWidth = 9;
+            ctx.lineCap = 'round';
+            ctx.strokeStyle = '#000000';
+
+            const leftArmEndX = keeper.state === 'diving-left' ? -w * 0.75 : -w * 0.65;
+            const leftArmEndY = keeper.state === 'diving-left' ? -h * 0.18 : h * 0.05;
+            
+            ctx.beginPath();
+            ctx.moveTo(-w * 0.25, h * 0.08);
+            ctx.lineTo(leftArmEndX, leftArmEndY);
+            ctx.strokeStyle = '#ef4444'; 
+            ctx.stroke();
+
+            ctx.beginPath();
+            ctx.arc(leftArmEndX, leftArmEndY, w * 0.14, 0, Math.PI * 2);
+            ctx.fillStyle = '#ef4444'; 
+            ctx.fill();
+            ctx.lineWidth = 3;
+            ctx.strokeStyle = '#000000';
+            ctx.stroke();
+
+            const rightArmEndX = keeper.state === 'diving-right' ? w * 0.75 : w * 0.65;
+            const rightArmEndY = keeper.state === 'diving-right' ? -h * 0.18 : h * 0.05;
+
+            ctx.beginPath();
+            ctx.moveTo(w * 0.25, h * 0.08);
+            ctx.lineTo(rightArmEndX, rightArmEndY);
+            ctx.strokeStyle = '#ef4444'; 
+            ctx.stroke();
+
+            ctx.beginPath();
+            ctx.arc(rightArmEndX, rightArmEndY, w * 0.14, 0, Math.PI * 2);
+            ctx.fillStyle = '#ef4444'; 
+            ctx.fill();
+            ctx.stroke();
+
+            ctx.lineWidth = 7;
+            ctx.strokeStyle = '#000000';
+            
+            // Left Leg
+            ctx.beginPath();
+            ctx.moveTo(-w * 0.18, h * 0.35);
+            ctx.lineTo(-w * 0.18, h * 0.44);
+            ctx.strokeStyle = '#b07cfb'; 
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.ellipse(-w * 0.22, h * 0.44, w * 0.12, h * 0.06, 0, 0, Math.PI * 2);
+            ctx.fillStyle = '#2563eb'; 
+            ctx.fill();
+            ctx.stroke();
+
+            // Right Leg
+            ctx.beginPath();
+            ctx.moveTo(w * 0.18, h * 0.35);
+            ctx.lineTo(w * 0.18, h * 0.44);
+            ctx.strokeStyle = '#b07cfb';
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.ellipse(w * 0.22, h * 0.44, w * 0.12, h * 0.06, 0, 0, Math.PI * 2);
+            ctx.fillStyle = '#2563eb';
+            ctx.fill();
+            ctx.stroke();
+
+            ctx.restore();
+        }
+
+        function getMousePos(e) {
+            const rect = canvas.getBoundingClientRect();
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+            return {
+                x: clientX - rect.left,
+                y: clientY - rect.top
+            };
+        }
+
+        function onStartDrag(pos) {
+            if (gameState !== 'waiting') return;
+
+            const dist = Math.hypot(pos.x - ball.x, pos.y - ball.y);
+            if (dist < ball.radius * 2) {
+                isDragging = true;
+                dragStart = { ...pos };
+                dragCurrent = { ...pos };
+                lastDragTime = Date.now();
+                gameState = 'dragging';
+                document.getElementById('drag-guide').style.opacity = '0';
+            }
+        }
+
+        function onMoveDrag(pos) {
+            if (!isDragging) return;
+            dragCurrent = { ...pos };
+
+            const dx = dragCurrent.x - dragStart.x;
+            const dy = dragCurrent.y - dragStart.y;
+            const dist = Math.hypot(dx, dy);
+
+            if (dist > 0) {
+                ball.x = ball.startX + dx * 0.4; 
+                ball.y = ball.startY + dy * 0.4;
+            }
+        }
+
+        function onEndDrag() {
+            if (!isDragging) return;
+            isDragging = false;
+
+            const dx = dragCurrent.x - dragStart.x;
+            const dy = dragCurrent.y - dragStart.y;
+            const duration = Date.now() - lastDragTime;
+            
+            if (Math.abs(dy) > 15 && dy < 0) {
+                const speedFactor = Math.min(Math.abs(dy) / (duration || 1) * 1.5, 20);
+                ball.vx = (dx / Math.abs(dy)) * speedFactor * 1.8;
+                ball.vy = -speedFactor * 2.2; 
+
+                if (ball.vx > 10) ball.vx = 10;
+                if (ball.vx < -10) ball.vx = -10;
+                if (ball.vy > -8) ball.vy = -12;
+
+                ball.vRotation = ball.vx * 0.02 + 0.1;
+                gameState = 'flying';
+                attempts++;
+                document.getElementById('attempt-counter').innerText = attempts;
+                
+                playKickSound();
+            } else {
+                initPositions();
+            }
+        }
+
+        canvas.addEventListener('mousedown', (e) => onStartDrag(getMousePos(e)));
+        window.addEventListener('mousemove', (e) => onMoveDrag(getMousePos(e)));
+        window.addEventListener('mouseup', () => onEndDrag());
+
+        canvas.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            onStartDrag(getMousePos(e));
+        }, { passive: false });
+        window.addEventListener('touchmove', (e) => {
+            onMoveDrag(getMousePos(e));
+        }, { passive: true });
+        window.addEventListener('touchend', () => {
+            onEndDrag();
+        });
+
+        function handleGoalScored() {
+            gameState = 'celebrating';
+            goals++;
+            document.getElementById('goal-counter').innerText = goals;
+            
+            playWhistleSound();
+            setTimeout(playGoalCheer, 250);
+
+            const goalOverlay = document.getElementById('goal-overlay');
+            goalOverlay.style.opacity = '1';
+            goalOverlay.style.pointerEvents = 'auto';
+            goalOverlay.classList.remove('scale-95');
+            goalOverlay.classList.add('scale-100');
+
+            triggerConfetti();
+
+            setTimeout(() => {
+                goalOverlay.style.opacity = '0';
+                goalOverlay.style.pointerEvents = 'none';
+                
+                const cardPopup = document.getElementById('card-popup');
+                cardPopup.style.opacity = '1';
+                cardPopup.style.pointerEvents = 'auto';
+
+                // Voltea la tarjeta automáticamente sin necesidad de hacer clic
+                setTimeout(() => {
+                    cardOpened = true;
+                    cardInner.style.transform = 'rotateY(180deg)';
+                    playWhistleSound();
+                }, 500);
+            }, 2300);
+        }
+
+        function handleSaveOccured() {
+            gameState = 'saved';
+            playSaveSound();
+            
+            setTimeout(() => {
+                initPositions();
+            }, 1200);
+        }
+
+        function triggerConfetti() {
+            const colors = ['#f43f5e', '#10b981', '#3b82f6', '#eab308', '#ec4899', '#8b5cf6'];
+            const container = document.body;
+
+            for (let i = 0; i < 75; i++) {
+                const confetti = document.createElement('div');
+                confetti.classList.add('confetti');
+                confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                
+                const x = window.innerWidth / 2;
+                const y = window.innerHeight * 0.4;
+                confetti.style.left = `${x}px`;
+                confetti.style.top = `${y}px`;
+
+                const angle = Math.random() * Math.PI * 2;
+                const velocity = 5 + Math.random() * 10;
+                const vx = Math.cos(angle) * velocity;
+                const vy = Math.sin(angle) * velocity - 5; 
+                
+                container.appendChild(confetti);
+
+                let posX = x;
+                let posY = y;
+                let currentVy = vy;
+                const gravity = 0.35;
+                let life = 100;
+
+                function animateConfettiPiece() {
+                    posX += vx;
+                    posY += currentVy;
+                    currentVy += gravity;
+                    life -= 1;
+
+                    confetti.style.left = `${posX}px`;
+                    confetti.style.top = `${posY}px`;
+                    confetti.style.opacity = life / 100;
+                    confetti.style.transform = `rotate(${life * 4}deg) scale(${1 + (life / 150)})`;
+
+                    if (life > 0 && posY < window.innerHeight) {
+                        requestAnimationFrame(animateConfettiPiece);
+                    } else {
+                        confetti.remove();
+                    }
+                }
+                
+                requestAnimationFrame(animateConfettiPiece);
+            }
+        }
+
+        function updateGame() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            if (keeper.state === 'idle') {
+                keeper.x += keeper.direction * keeper.speed;
+                const fieldLimitLeft = canvas.width * 0.22;
+                const fieldLimitRight = canvas.width * 0.78;
+
+                if (keeper.x < fieldLimitLeft) {
+                    keeper.x = fieldLimitLeft;
+                    keeper.direction = 1;
+                } else if (keeper.x > fieldLimitRight) {
+                    keeper.x = fieldLimitRight;
+                    keeper.direction = -1;
+                }
+
+                if (gameState === 'flying' && ball.y < canvas.height * 0.5 && ball.y > canvas.height * 0.22) {
+                    if (ball.vx > 1) {
+                        keeper.state = 'diving-right';
+                        keeper.direction = 1;
+                    } else if (ball.vx < -1) {
+                        keeper.state = 'diving-left';
+                        keeper.direction = -1;
+                    }
+                }
+            } else {
+                keeper.x += keeper.direction * (keeper.speed * 1.4);
+                keeper.diveTimer++;
+
+                if (keeper.diveTimer > 30) {
+                    keeper.state = 'idle';
+                    keeper.diveTimer = 0;
+                }
+            }
+
+            const goalsConfig = getGoalDetails();
+            ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(goalsConfig.goalLeft, goalsConfig.goalTop, goalsConfig.goalRight - goalsConfig.goalLeft, goalsConfig.goalBottom - goalsConfig.goalTop);
+
+            drawGoalkeeper(keeper.x, keeper.y, keeper.width, keeper.height);
+
+            if (gameState === 'flying') {
+                ball.x += ball.vx;
+                ball.y += ball.vy;
+                ball.rotation += ball.vRotation;
+
+                const flightProgress = (ball.y - goalsConfig.goalTop) / (ball.startY - goalsConfig.goalTop);
+                const sizeScale = 0.45 + 0.55 * Math.max(0, Math.min(1, flightProgress));
+                ball.currentRadius = ball.radius * sizeScale;
+
+                ball.vx *= 0.985;
+                ball.vy *= 0.985;
+
+                const keeperLeft = keeper.x - keeper.width * 0.75;
+                const keeperRight = keeper.x + keeper.width * 0.75;
+                const keeperTop = keeper.y - keeper.height * 0.4;
+                const keeperBottom = keeper.y + keeper.height * 0.5;
+
+                if (
+                    ball.x + ball.currentRadius > keeperLeft &&
+                    ball.x - ball.currentRadius < keeperRight &&
+                    ball.y + ball.currentRadius > keeperTop &&
+                    ball.y - ball.currentRadius < keeperBottom
+                ) {
+                    ball.vx = (ball.x - keeper.x) * 0.5 + (Math.random() - 0.5) * 5;
+                    ball.vy = Math.abs(ball.vy) * 0.4 + 2; 
+                    handleSaveOccured();
+                }
+
+                else if (ball.y <= goalsConfig.goalBottom) {
+                    if (ball.x >= goalsConfig.goalLeft && ball.x <= goalsConfig.goalRight) {
+                        handleGoalScored();
+                    } else {
+                        handleSaveOccured();
+                    }
+                }
+            }
+
+            if (gameState === 'dragging' && isDragging) {
+                ctx.beginPath();
+                ctx.moveTo(ball.startX, ball.startY);
+                ctx.lineTo(ball.x, ball.y);
+                ctx.strokeStyle = 'rgba(74, 222, 128, 0.4)';
+                ctx.lineWidth = 4;
+                ctx.setLineDash([6, 4]);
+                ctx.stroke();
+                ctx.setLineDash([]);
+            }
+
+            drawSoccerBall(ball.x, ball.y, ball.currentRadius, ball.rotation);
+
+            requestAnimationFrame(updateGame);
+        }
+
+        document.getElementById('start-btn').addEventListener('click', () => {
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+            playWhistleSound();
+            document.getElementById('welcome-modal').classList.add('opacity-0');
+            setTimeout(() => {
+                document.getElementById('welcome-modal').classList.add('hidden');
+            }, 500);
+            
+            initPositions();
+            updateGame();
+        });
+
+        document.getElementById('reset-game-btn').addEventListener('click', () => {
+            attempts = 0;
+            goals = 0;
+            document.getElementById('attempt-counter').innerText = attempts;
+            document.getElementById('goal-counter').innerText = goals;
+            initPositions();
+        });
+
+        const cardInner = document.getElementById('card-inner');
+        const interactiveCard = document.getElementById('interactive-3d-card');
+        let cardOpened = false;
+
+        interactiveCard.addEventListener('click', (e) => {
+            cardOpened = !cardOpened;
+            if (cardOpened) {
+                cardInner.style.transform = 'rotateY(180deg)';
+                playWhistleSound();
+            } else {
+                cardInner.style.transform = 'rotateY(0deg)';
+            }
+        });
+
+        document.getElementById('card-date-placeholder').innerText = new Date().toLocaleDateString('es-ES', {
+            day: 'numeric',
+            month: 'long',
+            year: 'numeric'
+        });
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const externalMsg = urlParams.get('message');
+        const mainGreetingText = document.getElementById('main-greeting-text');
+        if (externalMsg && mainGreetingText) {
+            mainGreetingText.innerText = decodeURIComponent(externalMsg);
+        }
+    </script>
+</body>
+</html>
